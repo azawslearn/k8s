@@ -1,0 +1,72 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: notes-app-service
+spec:
+  selector:
+    app: notes-app
+  ports:
+    - name: http
+      port: 80
+      targetPort: 5000
+  type: LoadBalancer
+  externalTrafficPolicy: Cluster
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notes-app-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notes-app
+  template:
+    metadata:
+      labels:
+        app: notes-app
+    spec:
+      containers:
+        - name: notes-app-container
+          image: alenprost/k8sapp
+          ports:
+            - containerPort: 5000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notes-db-service
+spec:
+  selector:
+    app: notes-db
+  ports:
+    - name: mysql
+      port: 3306
+      targetPort: 3306
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notes-db-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notes-db
+  template:
+    metadata:
+      labels:
+        app: notes-db
+    spec:
+      containers:
+        - name: notes-db-container
+          image: mysql:5.7
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: password
+            - name: MYSQL_DATABASE
+              value: notes_db
+          ports:
+            - containerPort: 3306
