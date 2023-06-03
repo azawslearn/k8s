@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-deployment
+spec:
+  selector:
+    matchLabels:
+      app: my-app
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+        - name: container1
+          image: azawslearn/devopsrepo:httpd_nginx
+          ports:
+            - containerPort: 80
+        - name: container2
+          image: azawslearn/devopsrepo:notesapp_no_db
+          ports:
+            - containerPort: 5000
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-service
+spec:
+  selector:
+    app: my-app
+  ports:
+    - name: port1
+      protocol: TCP
+      port: 80
+      targetPort: 80
+    - name: port2
+      protocol: TCP
+      port: 5000
+      targetPort: 5000
+  type: ClusterIP
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hello-world-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  ingressClassName: nginx
+  rules:
+  - http:
+      paths:
+      - path: /hello-world-one
+        pathType: Prefix
+        backend:
+          service:
+            name: my-service
+            port:
+              number: 80
+      - path: /hello-world-two
+        pathType: Prefix
+        backend:
+          service:
+            name: my-service
+            port:
+              number: 5000
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: my-service
+            port:
+              number: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hello-world-ingress-static
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/rewrite-target: /static/$2
+spec:
+  ingressClassName: nginx
+  rules:
+  - http:
+      paths:
+      - path: /static
+        pathType: Prefix
+        backend:
+          service:
+            name: my-service
+            port: 
+              number: 80
